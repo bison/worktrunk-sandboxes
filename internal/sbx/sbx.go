@@ -325,8 +325,10 @@ func (c *Client) RecentBlockedHosts(sandbox string) []string {
 
 // Agents is sbx's built-in agent list (completion).
 func Agents() []string {
-	return []string{"claude", "codex", "copilot", "cursor", "docker-agent",
-		"droid", "gemini", "kiro", "opencode", "shell"}
+	return []string{
+		"claude", "codex", "copilot", "cursor", "docker-agent",
+		"droid", "gemini", "kiro", "opencode", "shell",
+	}
 }
 
 // ExecAttach replaces the current process with `sbx args...` -- the attach

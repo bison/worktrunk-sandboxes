@@ -176,8 +176,8 @@ func (a *app) newRunCmd() *cobra.Command {
 func (a *app) newCreateCmd() *cobra.Command {
 	f := &launchFlags{}
 	cmd := &cobra.Command{
-		Use:   "create [BRANCH [REPO]] [flags]",
-		Short: "Create a sandbox for a worktree without attaching",
+		Use:               "create [BRANCH [REPO]] [flags]",
+		Short:             "Create a sandbox for a worktree without attaching",
 		Args:              cobra.ArbitraryArgs,
 		ValidArgsFunction: completeBranches,
 		RunE: func(cmd *cobra.Command, args []string) error {

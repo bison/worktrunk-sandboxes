@@ -22,6 +22,13 @@ func (Lint) Go() error {
 	return sh.RunV("golangci-lint", "run")
 }
 
+type Tools mg.Namespace
+
+// Gofumpt formats the entire repo with gofumpt.
+func (Tools) Gofumpt() error {
+	return sh.RunV("gofumpt", "-l", "-w", ".")
+}
+
 type Test mg.Namespace
 
 // Unit runs the unit tests.

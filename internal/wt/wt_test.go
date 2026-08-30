@@ -57,8 +57,10 @@ func gitFixture(t *testing.T) (repo, worktree string) {
 	repo = t.TempDir()
 	git := func(args ...string) {
 		t.Helper()
-		cmd := exec.Command("git", append([]string{"-C", repo,
-			"-c", "user.name=t", "-c", "user.email=t@t", "-c", "init.defaultBranch=main"}, args...)...)
+		cmd := exec.Command("git", append([]string{
+			"-C", repo,
+			"-c", "user.name=t", "-c", "user.email=t@t", "-c", "init.defaultBranch=main",
+		}, args...)...)
 		if out, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("git %v: %v\n%s", args, err, out)
 		}
