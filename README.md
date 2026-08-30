@@ -24,7 +24,7 @@ Requires `git`, `wt`, and `sbx` on `PATH` at runtime.
 
 ```sh
 cd ~/Code/netbirdio/netbird
-wt sbx run my-feature                 # create branch+worktree if needed, attach agent
+wt sbx run my-feature                 # branch+worktree if needed, attach
 wt sbx run my-feature -- --continue   # re-attach, resume the conversation
 wt sbx run my-feature -a shell        # plain shell in the same environment
 wt sbx                                # dashboard: worktrees + sandboxes + grants
@@ -42,7 +42,7 @@ branch and worktree (and, via hooks, its grants).
 For repo `R`, worktree `W = R/.worktrees/<branch>`, and configured
 context mounts `E1..En`, a session mounts, in order:
 
-```
+```text
 W  E1..En  R
 ```
 
@@ -164,7 +164,7 @@ so `wt sbx <TAB>` completes nothing; completions work when invoked as
 mage build             # -> bin/wt-sbx
 mage test:unit         # unit tests
 mage lint:go           # golangci-lint
-mage test:integration  # integration suite against the real sbx CLI (dev machine only)
+mage test:integration  # against the real sbx CLI (dev machine only)
 ```
 
 The integration suite (`WT_SBX_TEST_SBX=1`, build tag `integration`)

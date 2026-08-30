@@ -1,0 +1,14 @@
+---
+extends: default
+
+rules:
+  # SHA-pinned `uses:` lines with version comments run long.
+  line-length:
+    max: 120
+  # Dependabot rewrites action pins as "@SHA # vX.Y.Z" with a single
+  # space before the comment; do not fight it.
+  comments:
+    min-spaces-from-content: 1
+  # `on:` as a workflow trigger key is not a truthy value.
+  truthy:
+    check-keys: false

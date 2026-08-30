@@ -17,9 +17,29 @@ func Install() error {
 
 type Lint mg.Namespace
 
+// All runs every linter.
+func (Lint) All() {
+	mg.Deps(Lint.Go, Lint.Yaml, Lint.Markdown, Lint.Actions)
+}
+
 // Go runs golangci-lint.
 func (Lint) Go() error {
 	return sh.RunV("golangci-lint", "run")
+}
+
+// Yaml runs yamllint.
+func (Lint) Yaml() error {
+	return sh.RunV("yamllint", ".")
+}
+
+// Markdown runs markdownlint.
+func (Lint) Markdown() error {
+	return sh.RunV("markdownlint", "**/*.md")
+}
+
+// Actions runs actionlint.
+func (Lint) Actions() error {
+	return sh.RunV("actionlint")
 }
 
 type Tools mg.Namespace
