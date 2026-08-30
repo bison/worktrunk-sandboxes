@@ -153,9 +153,10 @@ an API. Nothing ever reads stdin.
 
 `wt sbx completion zsh` (bash/fish/powershell too) with dynamic
 completion for branches, grant names, recently blocked hosts, agents,
-and templates. When invoked through `wt`, argument completion depends on
-worktrunk delegating to the `wt-sbx` binary; completions always work
-when invoked as `wt-sbx` directly.
+and templates. Worktrunk's own completion is clap's dynamic completer,
+which does not delegate arguments of dispatched `wt-<name>` subcommands,
+so `wt sbx <TAB>` completes nothing; completions work when invoked as
+`wt-sbx` directly.
 
 ## Development
 
