@@ -8,8 +8,8 @@ import (
 
 func TestSandboxName(t *testing.T) {
 	cases := []struct{ repo, branch, want string }{
-		{"/Users/x/Code/netbirdio/netbird", "my-feature", "netbird-my-feature"},
-		{"/Users/x/Code/netbirdio/netbird", "fix/proxy/retry", "netbird-fix-proxy-retry"},
+		{"/Users/x/Code/myorg/myproject", "my-feature", "myproject-my-feature"},
+		{"/Users/x/Code/myorg/myproject", "fix/proxy/retry", "myproject-fix-proxy-retry"},
 		{"/r", "a", "r-a"},
 	}
 	for _, c := range cases {

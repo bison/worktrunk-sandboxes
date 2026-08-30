@@ -35,12 +35,12 @@ code-roots = ["~/Code"]
 extra-mounts = ["{{ repo_parent }}:ro"]
 
 [network]
-allow = ["docs.netbird.io", "pkgs.netbird.io"]
+allow = ["docs.example.com", "pkgs.example.com"]
 
 [default.github]
 command = "op read --account my.1password.eu 'op://sandbox/gh-ro/credential'"
 
-[grants.netbirdio-pr-write]
+[grants.myorg-pr-write]
 service = "github"
 command = "op read --account my.1password.eu 'op://sandbox/gh-pr-write/credential'"
 
@@ -68,7 +68,7 @@ func TestParseExample(t *testing.T) {
 	if cfg.Defaults["github"].Command == "" {
 		t.Error("default.github missing")
 	}
-	if got := cfg.Grants["netbirdio-pr-write"].Kind(); got != "service" {
+	if got := cfg.Grants["myorg-pr-write"].Kind(); got != "service" {
 		t.Errorf("pr-write kind = %s", got)
 	}
 	if got := cfg.Grants["grafana-rw"].Kind(); got != "custom" {
@@ -77,7 +77,7 @@ func TestParseExample(t *testing.T) {
 	if got := cfg.Grants["net-all"].Kind(); got != "network" {
 		t.Errorf("net-all kind = %s", got)
 	}
-	if names := cfg.GrantNames(); strings.Join(names, ",") != "grafana-rw,net-all,netbirdio-pr-write" {
+	if names := cfg.GrantNames(); strings.Join(names, ",") != "grafana-rw,myorg-pr-write,net-all" {
 		t.Errorf("GrantNames = %v", names)
 	}
 }

@@ -312,13 +312,13 @@ func TestSweepFakeClock(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	f := newFixture(t)
-	f.eng.Cfg.NetworkAllow = []string{"docs.netbird.io"}
+	f.eng.Cfg.NetworkAllow = []string{"docs.example.com"}
 	if err := f.eng.Init(); err != nil {
 		t.Fatal(err)
 	}
 	want := []string{
-		"policy-check docs.netbird.io",
-		"policy-allow sb= hosts=docs.netbird.io",
+		"policy-check docs.example.com",
+		"policy-allow sb= hosts=docs.example.com",
 		"secret-set-source github ref= cmd=echo ro-baseline",
 	}
 	if strings.Join(f.sbx.calls, "|") != strings.Join(want, "|") {

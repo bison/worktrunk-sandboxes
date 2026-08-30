@@ -23,12 +23,12 @@ Requires `git`, `wt`, and `sbx` on `PATH` at runtime.
 ## Daily workflow
 
 ```sh
-cd ~/Code/netbirdio/netbird
+cd ~/Code/myorg/myproject
 wt sbx run my-feature                 # branch+worktree if needed, attach
 wt sbx run my-feature -- --continue   # re-attach, resume the conversation
 wt sbx run my-feature -a shell        # plain shell in the same environment
 wt sbx                                # dashboard: worktrees + sandboxes + grants
-wt sbx auth grant netbirdio-pr-write  # time-boxed write credential (default 1h)
+wt sbx auth grant myorg-pr-write  # time-boxed write credential (default 1h)
 wt sbx net allow api.example.com      # one blocked host, for the sandbox's life
 wt sbx net open -d 30m                # full egress for research (grants net-all)
 wt sbx auth revoke --all              # also fires on wt merge/remove via hooks
@@ -71,12 +71,12 @@ code-roots = ["~/Code"]               # where `list --all` scans; not mounts
 extra-mounts = ["{{ repo_parent }}:ro"]  # context mounts; built-in default []
 
 [network]
-allow = ["docs.netbird.io"]           # global delta on sbx's preset; `auth init`
+allow = ["docs.example.com"]           # global delta on sbx's preset; `auth init`
 
 [default.github]                      # global read-only baseline; `auth init`
 command = "op read --account my.1password.eu 'op://sandbox/gh-ro/credential'"
 
-[grants.netbirdio-pr-write]           # service grant: shadows the baseline
+[grants.myorg-pr-write]           # service grant: shadows the baseline
 service = "github"
 command = "op read --account my.1password.eu 'op://sandbox/gh-pr-write/credential'"
 

@@ -29,13 +29,13 @@ func TestParseRuleIDs(t *testing.T) {
 
 func TestParseListText(t *testing.T) {
 	out := "NAME              AGENT   STATUS   PORTS   WORKSPACE\n" +
-		"netbird-feat      claude  running  -       /Users/x/Code/netbirdio/netbird/.worktrees/feat\n" +
+		"myproject-feat      claude  running  -       /Users/x/Code/myorg/myproject/.worktrees/feat\n" +
 		"repo-other        shell   stopped  -       /Users/x/Code/org/repo\n"
 	sbs := ParseListText(out)
 	if len(sbs) != 2 {
 		t.Fatalf("got %v", sbs)
 	}
-	if sbs[0] != (Sandbox{Name: "netbird-feat", Agent: "claude", Status: "running"}) {
+	if sbs[0] != (Sandbox{Name: "myproject-feat", Agent: "claude", Status: "running"}) {
 		t.Errorf("row 0 = %+v", sbs[0])
 	}
 	// The empty store prints a notice, not a table.
@@ -87,13 +87,13 @@ func TestPolicyCheckNetwork(t *testing.T) {
 	var got []string
 	c := NewWithExec(func(args ...string) (string, error) {
 		got = args
-		return "Allowed: docs.netbird.io:443\n", nil
+		return "Allowed: docs.example.com:443\n", nil
 	})
-	ok, err := c.PolicyCheckNetwork("docs.netbird.io")
+	ok, err := c.PolicyCheckNetwork("docs.example.com")
 	if err != nil || !ok {
 		t.Fatalf("check = %v, %v", ok, err)
 	}
-	if strings.Join(got, " ") != "policy check network docs.netbird.io:443" {
+	if strings.Join(got, " ") != "policy check network docs.example.com:443" {
 		t.Errorf("args = %v", got)
 	}
 	c = NewWithExec(func(args ...string) (string, error) {

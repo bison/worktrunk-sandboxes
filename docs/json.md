@@ -18,32 +18,32 @@ Conventions:
 {
   "worktrees": [
     {
-      "repo": "/Users/x/Code/netbirdio/netbird",
+      "repo": "/Users/x/Code/myorg/myproject",
       "branch": "my-feature",
-      "path": "/Users/x/Code/netbirdio/netbird/.worktrees/my-feature",
-      "sandbox": "netbird-my-feature",
+      "path": "/Users/x/Code/myorg/myproject/.worktrees/my-feature",
+      "sandbox": "myproject-my-feature",
       "sandbox_status": "running",
       "agent": "claude",
-      "grants": ["netbirdio-pr-write"],
+      "grants": ["myorg-pr-write"],
       "marker": "⊝"
     }
   ],
   "sandboxes": [
     {
-      "name": "netbird-my-feature",
+      "name": "myproject-my-feature",
       "agent": "claude",
       "status": "running",
-      "repo": "/Users/x/Code/netbirdio/netbird",
+      "repo": "/Users/x/Code/myorg/myproject",
       "branch": "my-feature",
       "orphaned": false
     }
   ],
   "grants": [
     {
-      "name": "netbirdio-pr-write",
-      "sandbox": "netbird-my-feature",
+      "name": "myorg-pr-write",
+      "sandbox": "myproject-my-feature",
       "branch": "my-feature",
-      "repo": "/Users/x/Code/netbirdio/netbird",
+      "repo": "/Users/x/Code/myorg/myproject",
       "expires_at": "2026-08-30T13:00:00Z",
       "overdue": false
     }
@@ -87,7 +87,7 @@ Same grant objects as `list`.
 
 ```json
 {
-  "sandbox": "netbird-my-feature",
+  "sandbox": "myproject-my-feature",
   "log": ["<raw sbx policy log lines>"]
 }
 ```
