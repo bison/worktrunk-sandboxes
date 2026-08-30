@@ -168,5 +168,9 @@ mage test:integration  # against the real sbx CLI (dev machine only)
 ```
 
 The integration suite (`WT_SBX_TEST_SBX=1`, build tag `integration`)
-re-verifies the sbx output contracts the parsers depend on, so an sbx
-upgrade that changes them fails loudly.
+re-verifies the sbx output contracts the parsers depend on, and the e2e
+half drives the real binary end to end: it creates a sandbox on a
+scratch git fixture and checks the mount invariant, secret and policy
+propagation into the running sandbox, and revocation -- so an sbx
+upgrade that changes any behavior wt-sbx leans on fails loudly. It
+cleans up after itself and touches no global secrets or rules.
