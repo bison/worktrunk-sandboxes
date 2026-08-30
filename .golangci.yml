@@ -1,0 +1,12 @@
+version: "2"
+
+linters:
+  settings:
+    errcheck:
+      # User-facing message writes; a failed terminal write is not actionable.
+      exclude-functions:
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - fmt.Fprint
+        - io.WriteString
+        - (*text/tabwriter.Writer).Flush
