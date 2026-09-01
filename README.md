@@ -27,6 +27,7 @@ cd ~/Code/myorg/myproject
 wt sbx run my-feature                 # branch+worktree if needed, attach
 wt sbx run my-feature -- --continue   # re-attach, resume the conversation
 wt sbx run my-feature -a shell        # plain shell in the same environment
+wt sbx enter my-feature               # shell into the existing sandbox
 wt sbx                                # dashboard: worktrees + sandboxes + grants
 wt sbx auth grant myorg-pr-write  # time-boxed write credential (default 1h)
 wt sbx net allow api.example.com      # one blocked host, for the sandbox's life
@@ -67,6 +68,7 @@ write each other's worktrees. Sandboxes isolate repos from each other.
 [settings]
 template-registry = "quay.io/bison"   # -> sandbox-claude-code-docker:latest etc.
 default-model = "claude-opus-5"       # sets ANTHROPIC_DEFAULT_MODEL; -m '' disables
+shell = "zsh"                         # `enter` shell; default: the image's login shell
 code-roots = ["~/Code"]               # where `list --all` scans; not mounts
 extra-mounts = ["{{ repo_parent }}:ro"]  # context mounts; built-in default []
 

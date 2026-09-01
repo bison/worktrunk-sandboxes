@@ -22,6 +22,7 @@ import (
 type Settings struct {
 	TemplateRegistry string
 	DefaultModel     string
+	Shell            string
 	CodeRoots        []string
 	ExtraMounts      []string
 }
@@ -156,6 +157,8 @@ func (c *Config) parseSettings(md toml.MetaData, raw map[string]toml.Primitive) 
 			err = md.PrimitiveDecode(prim, &c.Settings.TemplateRegistry)
 		case "default-model":
 			err = md.PrimitiveDecode(prim, &c.Settings.DefaultModel)
+		case "shell":
+			err = md.PrimitiveDecode(prim, &c.Settings.Shell)
 		case "code-roots":
 			err = md.PrimitiveDecode(prim, &c.Settings.CodeRoots)
 		case "extra-mounts":

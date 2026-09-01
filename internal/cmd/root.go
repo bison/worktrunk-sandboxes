@@ -97,6 +97,7 @@ func (a *app) newRoot() *cobra.Command {
 		a.newListCmd(),
 		a.newRunCmd(),
 		a.newCreateCmd(),
+		a.newEnterCmd(),
 		a.newAuthCmd(),
 		a.newNetCmd(),
 		a.newSweepCmd(),

@@ -31,6 +31,7 @@ const example = `
 [settings]
 template-registry = "quay.io/bison"
 default-model = "claude-opus-5"
+shell = "zsh"
 code-roots = ["~/Code"]
 extra-mounts = ["{{ repo_parent }}:ro"]
 
@@ -56,7 +57,7 @@ network = ["**"]
 func TestParseExample(t *testing.T) {
 	cfg := mustParse(t, example)
 	s := cfg.Settings
-	if s.TemplateRegistry != "quay.io/bison" || s.DefaultModel != "claude-opus-5" {
+	if s.TemplateRegistry != "quay.io/bison" || s.DefaultModel != "claude-opus-5" || s.Shell != "zsh" {
 		t.Errorf("settings = %+v", s)
 	}
 	if len(s.ExtraMounts) != 1 || s.ExtraMounts[0] != "{{ repo_parent }}:ro" {

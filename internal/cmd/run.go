@@ -44,28 +44,22 @@ type launch struct {
 	agentArgs []string
 }
 
-// resolveLaunch turns [BRANCH [REPO]] plus flags into a launch. BRANCH
-// defaults to the current branch, REPO to the main checkout of cwd (or of
-// REPO when given), resolved through the shared .git so it works from
-// inside any worktree.
-func (a *app) resolveLaunch(f *launchFlags, cmd *cobra.Command, args []string) (*launch, error) {
-	positional := args
-	var agentArgs []string
-	if i := cmd.ArgsLenAtDash(); i >= 0 {
-		positional, agentArgs = args[:i], args[i:]
-	}
+// resolveTarget turns [BRANCH [REPO]] positionals into the repo, branch,
+// and original PR reference (empty unless BRANCH was one). BRANCH defaults
+// to the current branch, REPO to the main checkout of cwd (or of REPO when
+// given), resolved through the shared .git so it works from inside any
+// worktree.
+func resolveTarget(positional []string) (repo, branch, prSrc string, err error) {
 	if len(positional) > 2 {
-		return nil, usagef("at most BRANCH and REPO expected, got %d arguments", len(positional))
+		return "", "", "", usagef("at most BRANCH and REPO expected, got %d arguments", len(positional))
 	}
 	repoArg := "."
 	if len(positional) >= 2 {
 		repoArg = positional[1]
 	}
-	repo, err := wt.MainRepo(repoArg)
-	if err != nil {
-		return nil, err
+	if repo, err = wt.MainRepo(repoArg); err != nil {
+		return "", "", "", err
 	}
-	var branch, prSrc string
 	if len(positional) >= 1 {
 		branch = positional[0]
 		if pr, ok := wt.ParsePR(branch); ok {
@@ -74,10 +68,24 @@ func (a *app) resolveLaunch(f *launchFlags, cmd *cobra.Command, args []string) (
 			// original reference.
 			prSrc = branch
 			if branch, err = pr.HeadBranch(repo); err != nil {
-				return nil, err
+				return "", "", "", err
 			}
 		}
 	} else if branch, err = wt.CurrentBranch("."); err != nil {
+		return "", "", "", err
+	}
+	return repo, branch, prSrc, nil
+}
+
+// resolveLaunch turns [BRANCH [REPO]] plus flags into a launch.
+func (a *app) resolveLaunch(f *launchFlags, cmd *cobra.Command, args []string) (*launch, error) {
+	positional := args
+	var agentArgs []string
+	if i := cmd.ArgsLenAtDash(); i >= 0 {
+		positional, agentArgs = args[:i], args[i:]
+	}
+	repo, branch, prSrc, err := resolveTarget(positional)
+	if err != nil {
 		return nil, err
 	}
 
