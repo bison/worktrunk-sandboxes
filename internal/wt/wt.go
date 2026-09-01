@@ -127,16 +127,28 @@ func LocalBranches(repo string) []string {
 // a "cannot change directory" notice without shell integration -- harmless,
 // the sandbox gets the path explicitly.
 func EnsureWorktree(repo, branch string) (string, error) {
+	return EnsureWorktreeFrom(repo, branch, "")
+}
+
+// EnsureWorktreeFrom is EnsureWorktree for a branch that may need to be
+// created from a non-branch source: when branch does not exist and src is
+// set (a pr:{N} spec or PR URL), src is what `wt switch` gets -- --create
+// would branch off the default branch instead of the PR head.
+func EnsureWorktreeFrom(repo, branch, src string) (string, error) {
 	w, ok, err := WorktreeFor(repo, branch)
 	if err != nil {
 		return "", err
 	}
 	if !ok {
 		args := []string{"switch"}
-		if !BranchExists(repo, branch) {
-			args = append(args, "--create")
+		switch {
+		case BranchExists(repo, branch):
+			args = append(args, branch)
+		case src != "":
+			args = append(args, src)
+		default:
+			args = append(args, "--create", branch)
 		}
-		args = append(args, branch)
 		cmd := exec.Command("wt", args...)
 		cmd.Dir = repo
 		cmd.Stdout = os.Stderr // progress, not output
@@ -173,6 +185,13 @@ func gitOutput(dir string, args ...string) (string, error) {
 func gitRun(dir string, args ...string) error {
 	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
 	return cmd.Run()
+}
+
+func ghOutput(dir string, args ...string) (string, error) {
+	cmd := exec.Command("gh", args...)
+	cmd.Dir = dir
+	out, err := cmd.Output()
+	return string(out), err
 }
 
 func wtRun(dir string, args ...string) error {

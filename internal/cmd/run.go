@@ -65,9 +65,18 @@ func (a *app) resolveLaunch(f *launchFlags, cmd *cobra.Command, args []string) (
 	if err != nil {
 		return nil, err
 	}
-	var branch string
+	var branch, prSrc string
 	if len(positional) >= 1 {
 		branch = positional[0]
+		if pr, ok := wt.ParsePR(branch); ok {
+			// The sandbox is named after the head branch, so resolve it
+			// up front; worktree creation still goes through wt with the
+			// original reference.
+			prSrc = branch
+			if branch, err = pr.HeadBranch(repo); err != nil {
+				return nil, err
+			}
+		}
 	} else if branch, err = wt.CurrentBranch("."); err != nil {
 		return nil, err
 	}
@@ -98,7 +107,7 @@ func (a *app) resolveLaunch(f *launchFlags, cmd *cobra.Command, args []string) (
 		return l, nil
 	}
 
-	wtPath, err := wt.EnsureWorktree(repo, branch)
+	wtPath, err := wt.EnsureWorktreeFrom(repo, branch, prSrc)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +167,12 @@ func (a *app) newRunCmd() *cobra.Command {
 			"the configured context mounts, and the main repo read-write (worktrees\n" +
 			"share its .git). An existing sandbox is re-attached as-is: workspaces are\n" +
 			"fixed at creation, but -e and agent args apply per attach, so\n" +
-			"`run BRANCH -- --continue` resumes the previous conversation.",
+			"`run BRANCH -- --continue` resumes the previous conversation.\n\n" +
+			"BRANCH also accepts a GitHub pull request -- pr:{N} or the PR URL -- which\n" +
+			"checks out the PR's head branch into a worktree via wt and names the\n" +
+			"sandbox after it. Cross-repo (fork) PRs check out fine but are effectively\n" +
+			"read-only from the sandbox: the per-owner GitHub PATs cannot push to a\n" +
+			"contributor's fork.",
 		Args:              cobra.ArbitraryArgs,
 		ValidArgsFunction: completeBranches,
 		RunE: func(cmd *cobra.Command, args []string) error {
