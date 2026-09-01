@@ -26,6 +26,7 @@ type SbxOps interface {
 	SecretRm(service, sandbox string) error
 	SecretSetCustom(sandbox, host, env, placeholder, value string) error
 	SecretRmPlaceholder(placeholder, sandbox string) error
+	WriteGrantsEnv(sandbox, content string) error
 	PolicyAllowNetwork(sandbox string, hosts []string) ([]string, error)
 	PolicyRmNetwork(sandbox, id string) error
 	PolicyCheckNetwork(host string) (bool, error)
@@ -104,7 +105,13 @@ func (e *Engine) Grant(name string, t Target, dur time.Duration) error {
 			}
 		}
 	}
-	return e.finish(name, t, dur, spec)
+	if err := e.finish(name, t, dur, spec); err != nil {
+		return err
+	}
+	if strings.HasPrefix(spec, "custom:") {
+		e.syncEnvFile(t.Sandbox)
+	}
+	return nil
 }
 
 // AllowHost is the ad hoc network approval for one host, outside the
@@ -160,12 +167,13 @@ func (e *Engine) Revoke(name string, t Target) error {
 	if err != nil {
 		return err
 	}
-	found := false
+	found, hadCustom := false, false
 	for _, r := range rows {
 		if r.Sandbox == t.Sandbox && r.Name == name {
 			e.undo(r.Sandbox, r.Undo)
 			fmt.Fprintf(e.Out, "revoked %q from %s\n", name, t.Sandbox)
 			found = true
+			hadCustom = strings.HasPrefix(r.Undo, "custom:")
 			break
 		}
 	}
@@ -174,6 +182,9 @@ func (e *Engine) Revoke(name string, t Target) error {
 	}
 	if err := e.drop(t.Sandbox, name); err != nil {
 		return err
+	}
+	if hadCustom {
+		e.syncEnvFile(t.Sandbox)
 	}
 	e.syncMarker(t.Repo, t.Branch)
 	return nil
@@ -187,14 +198,19 @@ func (e *Engine) RevokeAll(t Target) error {
 	if err != nil {
 		return err
 	}
+	hadCustom := false
 	for _, r := range rows {
 		if r.Sandbox == t.Sandbox {
 			e.undo(r.Sandbox, r.Undo)
 			fmt.Fprintf(e.Out, "revoked %q from %s\n", r.Name, t.Sandbox)
+			hadCustom = hadCustom || strings.HasPrefix(r.Undo, "custom:")
 		}
 	}
 	if err := e.drop(t.Sandbox, ""); err != nil {
 		return err
+	}
+	if hadCustom {
+		e.syncEnvFile(t.Sandbox)
 	}
 	e.syncMarker(t.Repo, t.Branch)
 	return nil
@@ -216,6 +232,9 @@ func (e *Engine) Sweep() error {
 		e.undo(r.Sandbox, r.Undo)
 		if err := e.drop(r.Sandbox, r.Name); err != nil {
 			return err
+		}
+		if strings.HasPrefix(r.Undo, "custom:") {
+			e.syncEnvFile(r.Sandbox)
 		}
 		e.syncMarker(r.Repo, r.Branch)
 		fmt.Fprintf(e.Log, "wt-sbx: expired grant %q revoked from %s\n", r.Name, r.Sandbox)
@@ -341,6 +360,37 @@ func (e *Engine) resolve(src config.SecretSource) (string, error) {
 		return "", fmt.Errorf("resolved to an empty secret")
 	}
 	return val, nil
+}
+
+// syncEnvFile regenerates $HOME/.config/wt-sbx/grants.env inside the
+// sandbox from the active custom grants. It exists because custom-secret
+// env injection only binds at sandbox start; the stock template's
+// $BASH_ENV (/etc/sandbox-persistent.sh, which WriteGrantsEnv hooks) is
+// re-sourced by every non-interactive bash, so a mid-session grant reaches
+// the agent's next command with no guest-side setup. Values are proxy
+// placeholders, never secrets. Best-effort: a stopped sandbox has no exec
+// target, and start-time injection covers it there.
+func (e *Engine) syncEnvFile(sandbox string) {
+	rows, err := e.Store.Load()
+	if err != nil {
+		return
+	}
+	var lines []string
+	for _, r := range rows {
+		if r.Sandbox != sandbox {
+			continue
+		}
+		if _, env, ph, ok := ParseCustomSpec(r.Undo); ok {
+			lines = append(lines, "export "+env+"="+ph)
+		}
+	}
+	sort.Strings(lines)
+	content := "# Managed by wt-sbx; regenerated on every grant/revoke.\n" +
+		"# Values are proxy placeholders, not secrets.\n"
+	for _, l := range lines {
+		content += l + "\n"
+	}
+	_ = e.Sbx.WriteGrantsEnv(sandbox, content)
 }
 
 // drop removes rows for sandbox, all of them when name is empty.

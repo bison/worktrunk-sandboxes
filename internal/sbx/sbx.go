@@ -185,6 +185,36 @@ func (c *Client) SecretSetCustom(sandbox, host, env, placeholder, value string) 
 	return err
 }
 
+// grantsEnvHook is the line WriteGrantsEnv installs into
+// /etc/sandbox-persistent.sh. That file is the stock template's $BASH_ENV
+// (agent-owned, world-readable), sourced by every non-interactive bash the
+// agent runs -- which is what delivers a mid-session grant to unmodified
+// images without any guest-side setup. Images that switch the agent's shell
+// away from bash must make that shell source /etc/sandbox-persistent.sh on
+// every invocation themselves.
+const grantsEnvHook = `[ -f "$HOME/.config/wt-sbx/grants.env" ] && . "$HOME/.config/wt-sbx/grants.env"`
+
+// WriteGrantsEnv (re)writes $HOME/.config/wt-sbx/grants.env inside a
+// running sandbox and ensures /etc/sandbox-persistent.sh sources it. The
+// hook append is guarded, and re-checked on every sync in case sbx ever
+// rewrites its file. The content is proxy placeholders only -- never
+// secrets -- which is what makes passing it through the exec command line
+// acceptable.
+func (c *Client) WriteGrantsEnv(sandbox, content string) error {
+	script := `mkdir -p "$HOME/.config/wt-sbx" && printf '%s' ` +
+		shellQuote(content) + ` > "$HOME/.config/wt-sbx/grants.env" && ` +
+		`{ grep -qxF ` + shellQuote(grantsEnvHook) +
+		` /etc/sandbox-persistent.sh 2>/dev/null || printf '%s\n' ` +
+		shellQuote(grantsEnvHook) + ` >> /etc/sandbox-persistent.sh; }`
+	_, err := c.execFn("exec", sandbox, "--", "sh", "-c", script)
+	return err
+}
+
+// shellQuote single-quotes s for POSIX sh.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
 // SecretRmPlaceholder removes a custom secret by placeholder (sbx >= 0.39;
 // older sbx cannot address custom secrets, and the overwritten dead value
 // is the whole revocation there).

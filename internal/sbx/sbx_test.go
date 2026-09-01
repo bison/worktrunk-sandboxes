@@ -104,6 +104,31 @@ func TestPolicyCheckNetwork(t *testing.T) {
 	}
 }
 
+func TestWriteGrantsEnvInstallsHook(t *testing.T) {
+	var got []string
+	c := NewWithExec(func(args ...string) (string, error) {
+		got = args
+		return "", nil
+	})
+	if err := c.WriteGrantsEnv("repo-feat", "export A=wt-sbx-a-repo-feat\n"); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) < 5 || strings.Join(got[:5], " ") != "exec repo-feat -- sh -c" {
+		t.Fatalf("args = %v", got)
+	}
+	script := got[len(got)-1]
+	if !strings.Contains(script, `> "$HOME/.config/wt-sbx/grants.env"`) {
+		t.Errorf("script does not write grants.env: %s", script)
+	}
+	if !strings.Contains(script, ">> /etc/sandbox-persistent.sh") {
+		t.Errorf("script does not install the BASH_ENV hook: %s", script)
+	}
+	// The append must be guarded so repeated syncs stay idempotent.
+	if !strings.Contains(script, "grep -qxF "+shellQuote(grantsEnvHook)) {
+		t.Errorf("hook append is not guarded: %s", script)
+	}
+}
+
 func TestTemplateNames(t *testing.T) {
 	c := NewWithExec(func(args ...string) (string, error) {
 		return "REPOSITORY                                 TAG                  IMAGE ID       FLAVOR               CREATED\n" +

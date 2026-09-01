@@ -13,8 +13,9 @@ import (
 
 // fakeSbx records every sbx-level operation in order.
 type fakeSbx struct {
-	calls   []string
-	ruleIDs []string
+	calls      []string
+	ruleIDs    []string
+	envContent string // last WriteGrantsEnv content
 }
 
 func (f *fakeSbx) call(format string, a ...any) {
@@ -43,6 +44,12 @@ func (f *fakeSbx) SecretSetCustom(sandbox, host, env, placeholder, value string)
 
 func (f *fakeSbx) SecretRmPlaceholder(placeholder, sandbox string) error {
 	f.call("secret-rm-ph %s sb=%s", placeholder, sandbox)
+	return nil
+}
+
+func (f *fakeSbx) WriteGrantsEnv(sandbox, content string) error {
+	f.call("grants-env sb=%s", sandbox)
+	f.envContent = content
 	return nil
 }
 
@@ -214,9 +221,37 @@ func TestCustomGrantRoundTrip(t *testing.T) {
 	want := []string{
 		"secret-set-custom sb=repo-feat host=grafana.example.com:3000 env=GRAFANA_TOKEN ph=wt-sbx-grafana-rw-repo-feat val=" + RevokedValue,
 		"secret-rm-ph wt-sbx-grafana-rw-repo-feat sb=repo-feat",
+		"grants-env sb=repo-feat",
 	}
 	if strings.Join(f.sbx.calls, "|") != strings.Join(want, "|") {
 		t.Fatalf("revoke calls = %v", f.sbx.calls)
+	}
+}
+
+func TestCustomGrantSyncsEnvFile(t *testing.T) {
+	f := newFixture(t)
+	if err := f.eng.Grant("grafana-rw", target, 0); err != nil {
+		t.Fatal(err)
+	}
+	wantLine := "export GRAFANA_TOKEN=wt-sbx-grafana-rw-repo-feat\n"
+	if !strings.Contains(f.sbx.envContent, wantLine) {
+		t.Fatalf("env file after grant = %q, want line %q", f.sbx.envContent, wantLine)
+	}
+	// A service grant must not rewrite the env file.
+	f.sbx.calls = nil
+	if err := f.eng.Grant("gh-write", target, 0); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range f.sbx.calls {
+		if strings.HasPrefix(c, "grants-env") {
+			t.Fatalf("service grant wrote env file: %v", f.sbx.calls)
+		}
+	}
+	if err := f.eng.Revoke("grafana-rw", target); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(f.sbx.envContent, "GRAFANA_TOKEN") {
+		t.Fatalf("env file after revoke still has the export: %q", f.sbx.envContent)
 	}
 }
 
